@@ -32,7 +32,9 @@ export default function LoginPage() {
       setTimeout(() => router.push('/dashboard'), 1500)
       const expiresAt = Date.now() + 60 * 60 * 1000 // 1 hour
       localStorage.setItem('flydream_user', JSON.stringify({
-        email: form.email,
+        username: data.user.username,
+        email: data.user.email,
+        tier: data.user.tier,
         expiresAt
       }))
       // 🔁 Immediately go to dashboard (forces Navbar to reload)

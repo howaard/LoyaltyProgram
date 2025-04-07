@@ -26,7 +26,7 @@ export async function POST(req) {
     await users.updateOne({ email }, { $set: { lastLogin: new Date() } })
 
     // You could set a cookie here or return a token (JWT)
-    return NextResponse.json({ message: 'Login successful', user: { email: user.email, tier: user.tier } })
+    return NextResponse.json({ message: 'Login successful', user: { username: user.username, email: user.email, tier: user.tier } })
   } catch (err) {
     console.error('Login error:', err)
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
