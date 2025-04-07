@@ -28,9 +28,14 @@ export async function POST(req) {
         email,
         password: hashed,
         tier: 'Bronze',
+        isAdmin: false,
         points: {
           redeemable: 0,
           cumulative: 0,
+        },
+        spinData: {
+          lastSpinDate: null,
+          spinsUsedToday: 0
         },
         createdAt: new Date(),
         lastLogin: null,
