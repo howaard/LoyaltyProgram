@@ -70,7 +70,7 @@ export default function LuckyWheel({ spinsLeft, onSpinComplete }) {
         <button
             onClick={handleSpinClick}
             disabled={spinning || spinsLeft <= 0}
-            className="absolute top-55 left-55 transform-none -translate-x-1/2 -translate-y-1/2 z-10 w-20 h-20 bg-gradient-to-br from-[#f0f9ff] via-white to-[#dbeafe] border-4 border-[#0284c7] rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none cursor-pointer"
+            className="absolute top-55 left-55.5 transform-none -translate-x-1/2 -translate-y-1/2 z-10 w-20 h-20 bg-gradient-to-br from-[#f0f9ff] via-white to-[#dbeafe] border-4 border-[#0284c7] rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none cursor-pointer"
             aria-label="Spin the wheel"
             >
             <span className="text-xl font-bold text-[#0c4a6e] tracking-widest drop-shadow-sm">

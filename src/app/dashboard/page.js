@@ -12,7 +12,7 @@ const tierColors = {
   Bronze: '#8c6239',
   Silver: '#a0a0a0',
   Gold: '#facc15',
-  Platinum: '#3b82f6',
+  Platinum: '#20b2aa',
   Diamond: '#4b0082',
 }
 
@@ -24,12 +24,30 @@ const tierIcons = {
   Diamond: '/icons/diamond.png',
 }
 
+const tierThresholds = {
+  Bronze: 0,
+  Silver: 1000,
+  Gold: 3000,
+  Platinum: 6000,
+  Diamond: 10000
+}
+
+// Define next tier mapping
+const nextTierMap = {
+  Bronze: 'Silver',
+  Silver: 'Gold',
+  Gold: 'Platinum',
+  Platinum: 'Diamond',
+  Diamond: 'Diamond', // Diamond is highest tier
+}
+
 export default function DashboardPage() {
   const router = useRouter()
   const [user, setUser] = useState(null)
   const [showMenu, setShowMenu] = useState(false)
   const [spinsLeft, setSpinsLeft] = useState(null)
   const [rewardHistory, setRewardHistory] = useState([])
+  const [xpData, setXpData] = useState({ cumulative: 0, redeemable: 0 })
 
   useEffect(() => {
     const stored = localStorage.getItem('flydream_user')
@@ -51,6 +69,16 @@ export default function DashboardPage() {
     setUser(session)
     fetchSpinsLeft(session.email)
 
+    const fetchXp = async (email) => {
+      const res = await fetch('/api/user/xp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      const data = await res.json()
+      setXpData(data.points)
+    }
+
     const fetchHistory = async (email) => {
       const res = await fetch('/api/spin/history', {
         method: 'POST',
@@ -61,6 +89,7 @@ export default function DashboardPage() {
       setRewardHistory(data.rewards || [])
     }
 
+    fetchXp(session.email)
     fetchHistory(session.email)
   }, [])
 
@@ -108,6 +137,19 @@ export default function DashboardPage() {
     }
   }
 
+  // Get next tier details based on current tier
+  const getNextTierInfo = (currentTier) => {
+    if (!currentTier) return { nextTier: 'Silver', xpRequired: 1000 }
+    
+    const nextTier = nextTierMap[currentTier]
+    const nextTierThreshold = tierThresholds[nextTier]
+    const xpNeeded = Math.max(0, nextTierThreshold - xpData.cumulative)
+    
+    return { nextTier, xpRequired: xpNeeded }
+  }
+
+  const nextTierInfo = user ? getNextTierInfo(user.tier) : { nextTier: 'Silver', xpRequired: 1000 }
+
   return (
     <div className="min-h-screen bg-[#f5f9fd] px-8 py-6">
       <div className="flex justify-end items-center relative">
@@ -144,6 +186,63 @@ export default function DashboardPage() {
             )}
           </div>
         )}
+      </div>
+
+      <div className="mt-10 bg-white rounded-xl shadow-lg px-8 py-6 border border-blue-100">
+        <h2 className="text-xl font-bold text-[#132452] mb-4 flex items-center gap-2">
+          🚀 XP Progress
+          {user?.tier && (
+            <span
+              className={`px-3 py-1 text-sm rounded-full font-semibold text-white shadow-sm`}
+              style={{ backgroundColor: tierColors[user?.tier] }}
+            >
+              {user?.tier}
+            </span>
+          )}
+        </h2>
+
+        {/* XP Bar */}
+        <div className="mb-4">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Total XP: <strong>{xpData.cumulative}</strong></span>
+            {user?.tier !== 'Diamond' && (
+              <span>
+                Next Tier: <strong>{nextTierInfo.nextTier} ({tierThresholds[nextTierInfo.nextTier]})</strong>
+              </span>
+            )}
+          </div>
+
+          <div className="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] shadow-inner transition-all duration-700 ease-out"
+              style={{
+                width:
+                  user?.tier === 'Diamond'
+                    ? '100%'
+                    : `${Math.min(
+                        100,
+                        (xpData.cumulative / tierThresholds[nextTierInfo.nextTier]) * 100
+                      )}%`
+              }}
+            ></div>
+          </div>
+
+          <div className="mt-2 text-xs text-gray-500">
+            {user?.tier === 'Diamond' ? (
+              <span className="text-emerald-600 font-semibold">Max Tier Reached!</span>
+            ) : (
+              <>
+                {nextTierInfo.xpRequired} XP to <strong>{nextTierInfo.nextTier}</strong>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Redeemable XP */}
+        <div className="mt-4 text-sm text-gray-800">
+          Redeemable XP:
+          <span className="ml-2 text-[#0284c7] font-bold">{xpData.redeemable}</span>
+        </div>
       </div>
 
       <div className="mt-12 flex flex-col lg:flex-row gap-10 items-start">
