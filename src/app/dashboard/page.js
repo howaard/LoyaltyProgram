@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
-import LuckyWheel from '../components/LuckyWheel'
+import dynamic from 'next/dynamic'
+
+const LuckyWheel = dynamic(() => import('../components/LuckyWheel'), { ssr: false })
 
 const tierColors = {
   Bronze: '#8c6239',
@@ -27,6 +29,7 @@ export default function DashboardPage() {
   const [user, setUser] = useState(null)
   const [showMenu, setShowMenu] = useState(false)
   const [spinsLeft, setSpinsLeft] = useState(null)
+  const [rewardHistory, setRewardHistory] = useState([])
 
   useEffect(() => {
     const stored = localStorage.getItem('flydream_user')
@@ -47,6 +50,18 @@ export default function DashboardPage() {
 
     setUser(session)
     fetchSpinsLeft(session.email)
+
+    const fetchHistory = async (email) => {
+      const res = await fetch('/api/spin/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      const data = await res.json()
+      setRewardHistory(data.rewards || [])
+    }
+
+    fetchHistory(session.email)
   }, [])
 
   const handleLogout = () => {
@@ -63,6 +78,34 @@ export default function DashboardPage() {
   
     const data = await res.json()
     setSpinsLeft(data.spinsLeft)
+  }
+
+  const handleSpinComplete = async (reward) => {
+    alert(`🎉 You won: ${reward}`)
+  
+    // Optional: Send reward to backend
+    const res = await fetch('/api/spin/redeem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: user.email,
+        reward
+      })
+    })
+  
+    if (res.ok) {
+      // Refresh spins + history
+      fetchSpinsLeft(user.email)
+  
+      const updated = await fetch('/api/spin/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+      })
+  
+      const data = await updated.json()
+      setRewardHistory(data.rewards || [])
+    }
   }
 
   return (
@@ -103,14 +146,32 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <h1 className="text-3xl font-bold text-[#132452] mt-10">Dashboard</h1>
-      <LuckyWheel
-        spinsLeft={spinsLeft}
-        onSpinComplete={(reward) => {
-          alert(`🎉 You won: ${reward}`)
-          // (Optional) POST to /api/spin/redeem here
-        }}
-      />
+      <div className="mt-12 flex flex-col lg:flex-row gap-10 items-start">
+        {/* 🎯 Lucky Wheel */}
+        <div className="flex-1">
+          <LuckyWheel
+            spinsLeft={spinsLeft}
+            onSpinComplete={handleSpinComplete}
+          />
+        </div>
+
+        {/* 🧾 Reward History Sidebar */}
+        <div className="w-full lg:w-[300px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-md p-4">
+          <h2 className="text-lg font-semibold text-[#132452] mb-3">🧾 Lucky Draw History</h2>
+          {rewardHistory.length === 0 ? (
+            <p className="text-gray-500 text-sm">No spin history yet.</p>
+          ) : (
+            <ul className="space-y-3">
+              {rewardHistory.map((item, idx) => (
+                <li key={idx} className="flex justify-between text-sm border-b pb-2">
+                  <span>{item.reward}</span>
+                  <span className="text-gray-400">{new Date(item.date).toLocaleDateString()}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
