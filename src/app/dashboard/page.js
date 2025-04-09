@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
+import TicketHistory from '../components/TicketHistory'
 
 const LuckyWheel = dynamic(() => import('../components/LuckyWheel'), { ssr: false })
 
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const [spinsLeft, setSpinsLeft] = useState(null)
   const [rewardHistory, setRewardHistory] = useState([])
   const [xpData, setXpData] = useState({ cumulative: 0, redeemable: 0 })
+  const [tickets, setTickets] = useState([])
 
   useEffect(() => {
     const stored = localStorage.getItem('flydream_user')
@@ -91,6 +93,18 @@ export default function DashboardPage() {
 
     fetchXp(session.email)
     fetchHistory(session.email)
+
+    const fetchTickets = async (email) => {
+      const res = await fetch('/api/tickets/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      const data = await res.json()
+      setTickets(data.tickets || [])
+    }
+
+    fetchTickets(session.email)
   }, [])
 
   const handleLogout = () => {
@@ -212,7 +226,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
+          <div className="relative w-full h-5 bg-gray-200 rounded-full overflow-hidden">
             <div
               className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#3b82f6] to-[#60a5fa] shadow-inner transition-all duration-700 ease-out"
               style={{
@@ -255,7 +269,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 🧾 Reward History Sidebar */}
-        <div className="w-full lg:w-[300px] max-h-[400px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-md p-4">
+        <div className="w-full lg:w-[300px] max-h-[600px] overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-md p-4">
           <h2 className="text-lg font-semibold text-[#132452] mb-3">🧾 Lucky Draw History</h2>
           {rewardHistory.length === 0 ? (
             <p className="text-gray-500 text-sm">No spin history yet.</p>
@@ -271,6 +285,7 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+      <TicketHistory tickets={tickets} />
     </div>
   )
 }
