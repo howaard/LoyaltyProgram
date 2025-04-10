@@ -71,6 +71,7 @@ export default function DashboardPage() {
     }
 
     setUser(session)
+    fetchFreshUser(session.email) // 💥 get latest tier
     fetchSpinsLeft(session.email)
 
     const fetchXp = async (email) => {
@@ -164,20 +165,46 @@ export default function DashboardPage() {
       const data = await updated.json()
       setRewardHistory(data.rewards || [])
     }
+
+    await fetchFreshUser(user.email)
   }
 
   // Get next tier details based on current tier
   const getNextTierInfo = (currentTier) => {
-    if (!currentTier) return { nextTier: 'Silver', xpRequired: 1000 }
-    
+    if (!currentTier || !xpData?.cumulative) {
+      return { nextTier: 'Silver', xpRequired: 1000 }
+    }
+  
     const nextTier = nextTierMap[currentTier]
     const nextTierThreshold = tierThresholds[nextTier]
     const xpNeeded = Math.max(0, nextTierThreshold - xpData.cumulative)
-    
+  
     return { nextTier, xpRequired: xpNeeded }
   }
 
   const nextTierInfo = user ? getNextTierInfo(user.tier) : { nextTier: 'Silver', xpRequired: 1000 }
+
+  const fetchFreshUser = async (email) => {
+    const res = await fetch('/api/user/xp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+  
+    const data = await res.json()
+  
+    setXpData(data.points)
+  
+    // 💥 Pull the original session from localStorage to avoid stale user state
+    const stored = localStorage.getItem('flydream_user')
+    const session = stored ? JSON.parse(stored) : {}
+  
+    if (data.tier) {
+      const updatedUser = { ...session, tier: data.tier }
+      setUser(updatedUser)
+      localStorage.setItem('flydream_user', JSON.stringify(updatedUser))
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#f5f9fd] px-8 py-6">
@@ -233,7 +260,9 @@ export default function DashboardPage() {
         {/* XP Bar */}
         <div className="mb-4">
           <div className="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Total XP: <strong>{xpData.cumulative}</strong></span>
+            {xpData && (
+              <span>Total XP: <strong>{xpData.cumulative}</strong></span>
+            )}
             {user?.tier !== 'Diamond' && (
               <span>
                 Next Tier: <strong>{nextTierInfo.nextTier} ({tierThresholds[nextTierInfo.nextTier]})</strong>
@@ -270,7 +299,9 @@ export default function DashboardPage() {
         {/* Redeemable XP */}
         <div className="mt-4 text-sm text-gray-800">
           Redeemable XP:
-          <span className="ml-2 text-[#0284c7] font-bold">{xpData.redeemable}</span>
+          <span className="ml-2 text-[#0284c7] font-bold">
+            {xpData?.redeemable ?? 0}
+          </span>
         </div>
       </div>
 

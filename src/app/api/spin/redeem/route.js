@@ -9,6 +9,14 @@ const tierSpins = {
   Diamond: 5
 }
 
+const getTierFromXP = (xp) => {
+  if (xp >= 10000) return 'Diamond'
+  if (xp >= 6000) return 'Platinum'
+  if (xp >= 3000) return 'Gold'
+  if (xp >= 1000) return 'Silver'
+  return 'Bronze'
+}
+
 export async function POST(req) {
   const { email, reward } = await req.json()
   const today = new Date().toISOString().slice(0, 10)
@@ -70,6 +78,12 @@ export async function POST(req) {
     }
 
     await users.updateOne({ email }, updateQuery)
+
+    const newTier = getTierFromXP(user.points?.cumulative + xpEarned)
+
+    if (newTier !== user.tier) {
+      await users.updateOne({ email }, { $set: { tier: newTier } })
+    }
 
     return NextResponse.json({ message: 'Spin recorded', reward, xpEarned })
   } catch (err) {
