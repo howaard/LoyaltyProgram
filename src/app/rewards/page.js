@@ -38,18 +38,23 @@ export default function RewardsPage() {
   }
 
   const handleRedeem = async (reward) => {
-    if (redeemingId) return // prevent double clicks
+    if (redeemingId) return // Prevent double clicks
     setRedeemingId(reward._id)
   
-    const user = JSON.parse(localStorage.getItem('flydream_user'))
-    if (!user) {
-        toast('Please log in to redeem rewards', { icon: '🔒' })
-        setTimeout(() => {
-          window.location.href = '/auth/login'
-        }, 1500)
-        return
-      }
+    const userData = localStorage.getItem('flydream_user')
+    const user = userData ? JSON.parse(userData) : null
+    const now = Date.now()
+    
+    if (!user || now > user.expiresAt) {
+      localStorage.removeItem('flydream_user') // Clear expired session
+      toast.error('Session expired. Please log in again.')
+      setTimeout(() => {
+        window.location.href = '/auth/login'
+      }, 1500)
+      return
+    }
   
+    // If logged in, proceed with redemption
     const res = await fetch('/api/rewards/redeem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -63,7 +68,7 @@ export default function RewardsPage() {
   
     if (res.ok) {
       toast.success(`🎉 Redeemed "${reward.name}"!`)
-      // Reload rewards or XP
+      // Refresh rewards or XP
       router.refresh() // or re-fetch rewards manually
     } else {
       toast.error(result.error || 'Redemption failed')
@@ -71,6 +76,7 @@ export default function RewardsPage() {
   
     setRedeemingId(null)
   }
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f0f4f8] to-[#dbeafe] px-6 py-10">

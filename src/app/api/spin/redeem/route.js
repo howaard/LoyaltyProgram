@@ -25,16 +25,28 @@ export async function POST(req) {
     const maxSpins = tierSpins[user.tier] || 1
     const spinData = user.spinData || { lastSpinDate: null, spinsUsedToday: 0 }
 
-    let spinsUsedToday = spinData.lastSpinDate === today ? spinData.spinsUsedToday : 0
+    // ✅ Reset spins if it's a new day
+    if (spinData.lastSpinDate !== today) {
+      await users.updateOne(
+        { email },
+        {
+          $set: {
+            'spinData.lastSpinDate': today,
+            'spinData.spinsUsedToday': 0
+          }
+        }
+      )
+      spinData.spinsUsedToday = 0
+    }
+
+    const spinsUsedToday = spinData.spinsUsedToday
     if (spinsUsedToday >= maxSpins) {
       return NextResponse.json({ error: 'No spins left today' }, { status: 403 })
     }
 
-    // ✅ Determine if reward is XP (e.g., "100 XP")
     const xpMatch = reward.match(/^(\d+)\s*XP$/i)
     const xpEarned = xpMatch ? parseInt(xpMatch[1]) : 0
 
-    // ✅ Record reward in spin_rewards collection
     await rewards.insertOne({
       userEmail: email,
       tier: user.tier,
@@ -43,7 +55,6 @@ export async function POST(req) {
       source: 'daily-wheel'
     })
 
-    // ✅ Update spin usage + optional XP
     const updateQuery = {
       $set: {
         'spinData.lastSpinDate': today,
@@ -66,3 +77,4 @@ export async function POST(req) {
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }
+

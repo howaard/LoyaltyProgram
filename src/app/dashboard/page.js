@@ -6,6 +6,7 @@ import { ChevronDown } from 'lucide-react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import TicketHistory from '../components/TicketHistory'
+import RedemptionHistory from '../components/RedemptionHistory'
 
 const LuckyWheel = dynamic(() => import('../components/LuckyWheel'), { ssr: false })
 
@@ -50,6 +51,7 @@ export default function DashboardPage() {
   const [rewardHistory, setRewardHistory] = useState([])
   const [xpData, setXpData] = useState({ cumulative: 0, redeemable: 0 })
   const [tickets, setTickets] = useState([])
+  const [redemptions, setRedemptions] = useState([])
 
   useEffect(() => {
     const stored = localStorage.getItem('flydream_user')
@@ -105,6 +107,19 @@ export default function DashboardPage() {
     }
 
     fetchTickets(session.email)
+
+    const fetchRedemptions = async (email) => {
+      const res = await fetch('/api/redemptions/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await res.json()
+      setRedemptions(data.redemptions || [])
+    }
+    
+    fetchRedemptions(session.email)
+    
   }, [])
 
   const handleLogout = () => {
@@ -286,6 +301,7 @@ export default function DashboardPage() {
         </div>
       </div>
       <TicketHistory tickets={tickets} />
+      <RedemptionHistory redemptions={redemptions} />
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import clientPromise from '@/lib/mongodb'
 import { NextResponse } from 'next/server'
+import { ObjectId } from 'mongodb'
 
 export async function POST(req) {
   const { email, rewardId } = await req.json()
@@ -23,7 +24,7 @@ export async function POST(req) {
       return NextResponse.json({ error: 'Not enough XP' }, { status: 403 })
     }
 
-    if (reward.quantity <= 0) {
+    if (!reward.available) {
       return NextResponse.json({ error: 'Reward out of stock' }, { status: 410 })
     }
 
@@ -31,11 +32,6 @@ export async function POST(req) {
     await db.collection('users').updateOne(
       { email },
       { $inc: { 'points.redeemable': -reward.xpCost } }
-    )
-
-    await db.collection('rewards').updateOne(
-      { _id: reward._id },
-      { $inc: { quantity: -1 } }
     )
 
     // Log redemption
