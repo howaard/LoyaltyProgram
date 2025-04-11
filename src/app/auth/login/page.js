@@ -35,6 +35,7 @@ export default function LoginPage() {
         username: data.user.username,
         email: data.user.email,
         tier: data.user.tier,
+        isAdmin: data.user.isAdmin,
         expiresAt
       }))
       // 🔁 Immediately go to dashboard (forces Navbar to reload)

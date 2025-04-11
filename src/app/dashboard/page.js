@@ -7,6 +7,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import TicketHistory from '../components/TicketHistory'
 import RedemptionHistory from '../components/RedemptionHistory'
+import AdminDashboard from '../components/AdminDashboard'
 
 const LuckyWheel = dynamic(() => import('../components/LuckyWheel'), { ssr: false })
 
@@ -24,6 +25,7 @@ const tierIcons = {
   Gold: '/icons/gold.png',
   Platinum: '/icons/platinum.png',
   Diamond: '/icons/diamond.png',
+  admin: '/icons/admin.png'
 }
 
 const tierThresholds = {
@@ -216,12 +218,15 @@ export default function DashboardPage() {
               className="flex items-center gap-2 bg-white px-4 py-2 rounded shadow hover:bg-gray-50 transition"
             >
             <span className="text-sm text-gray-600">Welcome back,</span>
-            <span className="font-semibold" style={{ color: tierColors[user.tier || 'Bronze'] }}>
+            <span
+              className={`font-semibold`}
+              style={{ color: user.isAdmin ? '#6b7280' : tierColors[user.tier || 'Bronze'] }}
+            >
               {user.username}
-            </span>
+          </span>
             {user.tier && (
               <Image
-                src={tierIcons[user.tier]}
+                src={tierIcons[user.isAdmin ? 'admin' : user.tier]}
                 alt={`${user.tier} icon`}
                 width={20}
                 height={20}
@@ -243,6 +248,11 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {user?.isAdmin ? (
+        <AdminDashboard user={user} />
+      ) : (
+        <>
 
       <div className="mt-10 bg-white rounded-xl shadow-lg px-8 py-6 border border-blue-100">
         <h2 className="text-xl font-bold text-[#132452] mb-4 flex items-center gap-2">
@@ -333,6 +343,9 @@ export default function DashboardPage() {
       </div>
       <TicketHistory tickets={tickets} />
       <RedemptionHistory redemptions={redemptions} />
-    </div>
-  )
+      </>
+  
+  )}
+  </div>
+)
 }
