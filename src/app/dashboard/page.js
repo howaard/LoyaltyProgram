@@ -233,8 +233,8 @@ export default function DashboardPage() {
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 mt-2 bg-white rounded shadow-md w-48 text-sm z-10">
-                <a href="#" className="block px-4 py-2 hover:bg-gray-100">Account Settings</a>
+              <div className="absolute right-0 mt-2 bg-white rounded shadow-md w-38 text-sm z-10">
+                <a href="/account" className="block px-4 py-2 hover:bg-gray-100">Account Settings</a>
                 <a onClick={handleLogout} className="block px-4 py-2 hover:bg-gray-100 cursor-pointer">
                   Log out
                 </a>
