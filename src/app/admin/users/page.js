@@ -3,6 +3,19 @@
 import { useEffect, useState } from 'react'
 import { Download, FileText } from 'lucide-react'
 import html2pdf from 'html2pdf.js'
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    Tooltip,
+    CartesianGrid,
+    PieChart,
+    Pie,
+    Cell,
+    Legend
+  } from 'recharts' 
 
 export default function AdminUserAnalytics() {
   const [users, setUsers] = useState([])
@@ -59,6 +72,33 @@ export default function AdminUserAnalytics() {
     link.click()
     document.body.removeChild(link)
   }
+  const xpBrackets = [
+    { label: '0–999', min: 0, max: 999 },
+    { label: '1k–2.9k', min: 1000, max: 2999 },
+    { label: '3k–5.9k', min: 3000, max: 5999 },
+    { label: '6k–9.9k', min: 6000, max: 9999 },
+    { label: '10k+', min: 10000, max: Infinity }
+  ]
+  
+  const xpDistribution = xpBrackets.map(bracket => ({
+    name: bracket.label,
+    users: users.filter(
+      u => u.points?.cumulative >= bracket.min && u.points?.cumulative <= bracket.max
+    ).length
+  }))
+  
+  const tierColors = {
+    Bronze: '#8c6239',
+    Silver: '#a0a0a0',
+    Gold: '#facc15',
+    Platinum: '#20b2aa',
+    Diamond: '#4b0082'
+  }
+  
+  const tierDistribution = Object.keys(tierColors).map(tier => ({
+    name: tier,
+    value: users.filter(u => u.tier === tier).length
+  }))
 
   const exportPDF = () => {
     const tableHTML = `
@@ -139,7 +179,47 @@ export default function AdminUserAnalytics() {
             ))}
           </tbody>
         </table>
+        
       </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-20">
+        {/* XP Bar Chart */}
+        <div className="bg-white border rounded-lg shadow p-4">
+            <h3 className="text-lg font-semibold text-[#132452] mb-2">📊 XP Distribution</h3>
+            <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={xpDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="users" fill="#0284c7" />
+            </BarChart>
+            </ResponsiveContainer>
+        </div>
+
+        {/* Tier Pie Chart */}
+        <div className="bg-white border rounded-lg shadow p-4">
+            <h3 className="text-lg font-semibold text-[#132452] mb-2">🥧 Tier Breakdown</h3>
+            <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+                <Pie
+                data={tierDistribution}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label
+                >
+                {tierDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={tierColors[entry.name]} />
+                ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+            </PieChart>
+            </ResponsiveContainer>
+        </div>
+        </div>
     </div>
   )
 }
