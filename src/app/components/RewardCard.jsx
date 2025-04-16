@@ -6,13 +6,26 @@ export default function RewardCard({ reward, onRedeem, isRedeeming }) {
   return (
     <div className="bg-white rounded-xl shadow-lg border border-blue-100 hover:shadow-xl transition-all duration-300 p-4 flex flex-col justify-between">
       <div className="relative w-full h-36 mb-4 rounded-md overflow-hidden">
-        <Image
-          src={reward.image}
-          alt={reward.name}
-          fill
-          className="object-contain"
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+        {typeof reward.image === 'string' && (reward.image.startsWith('http') || reward.image.startsWith('/')) ? (
+                    <Image
+                      src={reward.image}
+                      alt={reward.name}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.png'
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src="/placeholder.png"
+                      alt="Fallback image"
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  )}
       </div>
       <div>
         <h3 className="text-lg font-semibold text-[#0c4a6e] mb-1">{reward.name}</h3>
