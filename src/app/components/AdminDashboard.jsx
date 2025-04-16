@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 
 export default function AdminDashboard({ user }) {
   return (
@@ -10,20 +11,23 @@ export default function AdminDashboard({ user }) {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Link href="/admin/users">
         <div className="p-4 border rounded-lg shadow-sm bg-blue-50">
-          <h3 className="text-sm font-semibold mb-2">📊 Total Users</h3>
-          <p className="text-xl text-[#0284c7] font-bold">Coming Soon</p>
+          <h3 className="text-sm font-semibold mb-2">User Analytics</h3>
         </div>
+      </Link>
 
+      <Link href="/admin/rewards">
         <div className="p-4 border rounded-lg shadow-sm bg-green-50">
-          <h3 className="text-sm font-semibold mb-2">🎁 Total Rewards Redeemed</h3>
-          <p className="text-xl text-[#10b981] font-bold">Coming Soon</p>
+          <h3 className="text-sm font-semibold mb-2">Rewards</h3>
         </div>
+      </Link>
 
+      <Link href="/admin/spins">
         <div className="p-4 border rounded-lg shadow-sm bg-yellow-50">
-          <h3 className="text-sm font-semibold mb-2">💼 Tickets Sold</h3>
-          <p className="text-xl text-yellow-500 font-bold">Coming Soon</p>
+          <h3 className="text-sm font-semibold mb-2">Lucky Draw</h3>
         </div>
+      </Link>
       </div>
     </div>
   )
